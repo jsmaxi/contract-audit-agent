@@ -8,8 +8,10 @@ use serde_json::json;
 use std::{collections::HashMap, env, sync::Arc};
 use tokio;
 
+const LANGUAGE: &str = "Starknet Cairo"; // | Solidity | Starknet Cairo |
+
 pub(crate) trait AIAgentTrait {
-    fn new(name: &str, role_prompt: &str) -> Self;
+    fn new(name: &str, role_prompt: String) -> Self;
     async fn analyze(&self, contract_code: &str, client: Arc<Client>) -> Option<String>;
 }
 
@@ -20,38 +22,42 @@ pub(crate) struct AIAgent {
 }
 
 impl AIAgent {
-    fn get_output_prompt(&self) -> &str {
-        "Return your findings in the following JSON format:
-        {
-            \"vulnerabilities\": [
-                {
-                    \"name\": \"vulnerability name\",
-                    \"severity\": \"critical/high/medium/low\",
-                    \"description\": \"detailed description\",
-                    \"location\": \"function or line reference\",
-                    \"impacted_code\": \"impacted code block\",
-                    \"recommendations\": \"how to fix\"
-                }
-            ]
-        }
-        If no vulnerabilities are found, return an empty array.
-        If the input is invalid Solidity code, the output should be a JSON object with an error message."
+    fn get_output_prompt(&self) -> String {
+        format!(
+            r#"Return your findings in the following JSON format:
+            {{
+                "vulnerabilities": [
+                    {{
+                        "name": "vulnerability name",
+                        "severity": "critical/high/medium/low",
+                        "description": "detailed description",
+                        "location": "function or line reference",
+                        "impacted_code": "impacted code block",
+                        "recommendations": "how to fix"
+                    }}
+                ]
+            }}
+            If no vulnerabilities are found, return an empty array.
+            If the input is invalid {} code, the output should be a JSON object with an error message."#,
+            LANGUAGE
+        )
     }
 }
 
 impl AIAgentTrait for AIAgent {
-    fn new(name: &str, prompt: &str) -> Self {
+    fn new(name: &str, prompt: String) -> Self {
         AIAgent {
             name: name.to_string(),
-            prompt: prompt.to_string(),
+            prompt,
         }
     }
 
     async fn analyze(&self, contract_code: &str, client: Arc<Client>) -> Option<String> {
         let prompt: String = format!(
-            "{} {} \n\nAnalyze this Solidity code for vulnerabilities:\n\n{}",
+            "{} {} \n\nAnalyze this {} code for vulnerabilities:\n\n{}",
             self.prompt,
             self.get_output_prompt(),
+            LANGUAGE,
             contract_code
         );
 
@@ -68,70 +74,70 @@ impl AIAgentTrait for AIAgent {
 // Define specialized agents
 
 fn create_reentrancy_agent() -> AIAgent {
-    let role_prompt = "
-    You are a smart contract security expert specializing in detecting reentrancy vulnerabilities.
+    let role_prompt = format!("
+    You are a {} smart contract security expert specializing in detecting reentrancy vulnerabilities.
     Reentrancy occurs when a contract calls an external contract before updating its state, allowing the external contract to call back into the original contract.
-    Analyze the provided Solidity code and identify any reentrancy vulnerabilities.
+    Analyze the provided {} code and identify any reentrancy vulnerabilities.
     Avoid suggestions for future development.
-    ";
+    ", LANGUAGE, LANGUAGE);
     AIAgent::new("Reentrancy Agent", role_prompt)
 }
 
 fn create_integer_overflow_agent() -> AIAgent {
-    let role_prompt = "
-    You are a smart contract security expert specializing in detecting integer overflow/underflow vulnerabilities.
+    let role_prompt = format!("
+    You are a {} smart contract security expert specializing in detecting integer overflow/underflow vulnerabilities.
     Integer overflow/underflow occurs when arithmetic operations exceed the maximum or minimum limits of the data type.
-    Analyze the provided Solidity code and identify any integer overflow/underflow vulnerabilities. Provide detailed explanations and suggestions for fixes.
+    Analyze the provided {} code and identify any integer overflow/underflow vulnerabilities. Provide detailed explanations and suggestions for fixes.
     Avoid suggestions for future development.
-    ";
+    ", LANGUAGE, LANGUAGE);
     AIAgent::new("Integer Overflow Agent", role_prompt)
 }
 
 fn create_access_control_agent() -> AIAgent {
-    let role_prompt = "
-    You are a smart contract security expert specializing in detecting access control vulnerabilities.
+    let role_prompt = format!("
+    You are a {} smart contract security expert specializing in detecting access control vulnerabilities.
     Access control vulnerabilities occur when functions or state variables are not properly restricted, allowing unauthorized users to access or modify them.
-    Analyze the provided Solidity code and identify any access control vulnerabilities. Provide detailed explanations and suggestions for fixes.
+    Analyze the provided {} code and identify any access control vulnerabilities. Provide detailed explanations and suggestions for fixes.
     Avoid suggestions for future development.
-    ";
+    ", LANGUAGE, LANGUAGE);
     AIAgent::new("Access Control Agent", role_prompt)
 }
 
 fn create_contract_validation_agent() -> AIAgent {
-    let role_prompt = "
-    You are a smart contract security expert specializing in detecting validation issues and vulnerabilities.
-    Make sure all variables have valid values, validate amounts, suggest when to use Solidity requires if missing.
-    Analyze the provided Solidity code and identify any validation vulnerabilities. Provide detailed explanations and suggestions for fixes.
+    let role_prompt = format!("
+    You are a {} smart contract security expert specializing in detecting validation issues and vulnerabilities.
+    Make sure all variables have valid values, validate amounts, suggest when to use require checks if missing.
+    Analyze the provided {} code and identify any validation vulnerabilities. Provide detailed explanations and suggestions for fixes.
     Avoid suggestions for future development.
-    ";
+    ", LANGUAGE, LANGUAGE);
     AIAgent::new("Validation Agent", role_prompt)
 }
 
 fn create_events_agent() -> AIAgent {
-    let role_prompt = "
-    You are a smart contract security expert specializing in detecting issues with events.
+    let role_prompt = format!("
+    You are a {} smart contract security expert specializing in detecting issues with events.
     Make sure to suggest when events should be emitted in the provided code or when events are redundant. 
-    Analyze the provided Solidity code and identify any event issues. Provide detailed explanations and suggestions for fixes.
+    Analyze the provided {} code and identify any event issues. Provide detailed explanations and suggestions for fixes.
     Avoid suggestions for future development.
-    ";
+    ", LANGUAGE, LANGUAGE);
     AIAgent::new("Events Agent", role_prompt)
 }
 
 fn create_gas_agent() -> AIAgent {
-    let role_prompt = "
-    You are a smart contract security expert specializing in detecting gas optimisation issues.
-    Analyze the provided Solidity code and identify any gas optimisation issues os suggestions. Provide detailed explanations and suggestions for fixes.
+    let role_prompt = format!("
+    You are a {} smart contract security expert specializing in detecting gas optimisation issues.
+    Analyze the provided {} code and identify any gas optimisation issues os suggestions. Provide detailed explanations and suggestions for fixes.
     Avoid suggestions for future development.
-    ";
+    ", LANGUAGE, LANGUAGE);
     AIAgent::new("Gas Agent", role_prompt)
 }
 
 fn create_general_security_agent() -> AIAgent {
-    let role_prompt = "
-    You are a smart contract security expert specializing in general security best practices.
-    Analyze the provided Solidity code and identify any security vulnerabilities or bad practices. Provide detailed explanations and suggestions for fixes. 
+    let role_prompt = format!("
+    You are a {} smart contract security expert specializing in general security best practices.
+    Analyze the provided {} code and identify any security vulnerabilities or bad practices. Provide detailed explanations and suggestions for fixes. 
     Avoid suggestions for future development.
-    ";
+    ", LANGUAGE, LANGUAGE);
     AIAgent::new("General Security Agent", role_prompt)
 }
 
@@ -279,7 +285,7 @@ impl FormatDeduplicationAgentTrait for FormatDeduplicationAgent {
         ";
 
         let prompt: String = format!(
-            r#"Here is a list of smart contract vulnerabilities. Some may be duplicates with slightly different wording.
+            r#"Here is a list of {} smart contract vulnerabilities. Some may be duplicates with slightly different wording.
             Please analyze and combine duplicate entries, keeping the most detailed and relevant description and recommendations.
             Return the deduplicated list in the same JSON format.
 
@@ -288,6 +294,7 @@ impl FormatDeduplicationAgentTrait for FormatDeduplicationAgent {
             {}
 
             Return only the JSON, no additional text."#,
+            LANGUAGE,
             combined_json.to_string(),
             format,
         );
@@ -325,7 +332,46 @@ fn process_result(json_dedup: Option<String>) -> () {
 
 #[tokio::main]
 async fn main() {
-    let contract_code = r#"
+    let cairo_contract_code = r#"
+    #[contract]
+    mod TokenPool {
+        use starknet::ContractAddress;
+        use starknet::get_caller_address;
+        
+        #[storage]
+        struct Storage {
+            balances: LegacyMap::<ContractAddress, u256>,
+            token: ContractAddress,
+        }
+
+        #[constructor]
+        fn constructor(ref self: ContractState, token_address: ContractAddress) {
+            self.token.write(token_address);
+        }
+
+        #[external(v0)]
+        fn deposit(ref self: ContractState, amount: u256) {
+            let caller = get_caller_address();
+            IERC20Dispatcher::transfer_from(
+                self.token.read(), 
+                caller, 
+                get_contract_address(), 
+                amount
+            );
+            self.balances.write(caller, self.balances.read(caller) + amount);
+        }
+
+        #[external(v0)]
+        fn withdraw(ref self: ContractState, amount: u256) {
+            let caller = get_caller_address();
+            let current_balance = self.balances.read(caller);
+            IERC20Dispatcher::transfer(self.token.read(), caller, amount);
+            self.balances.write(caller, current_balance - amount);
+        }
+    }
+    "#;
+
+    let solidity_contract_code = r#"
     pragma solidity ^0.8.0;
 
     contract VulnerableContract {
@@ -348,7 +394,7 @@ async fn main() {
     let system = MultiAIAgentSystem::new();
 
     // Analyze the contract in parallel
-    let results = system.analyze_contract(contract_code).await;
+    let results = system.analyze_contract(&cairo_contract_code).await;
 
     // Print the results
     // for (agent_name, output) in results {
