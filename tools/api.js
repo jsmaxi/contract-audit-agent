@@ -7,7 +7,7 @@ const port = 8080;
 const route = "audit";
 
 const controller = new AbortController();
-const timeoutSeconds = 30_000;
+const timeoutSeconds = 300_000; // 5 minutes
 const timeoutId = setTimeout(() => controller.abort(), timeoutSeconds);
 
 const request = {

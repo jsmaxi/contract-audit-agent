@@ -1,4 +1,4 @@
-use actix_web::{web, App, HttpResponse, HttpServer, Responder};
+use actix_web::{middleware, web, App, HttpResponse, HttpServer, Responder};
 use agents::{
     deduplication_agent::{FormatDeduplicationAgent, FormatDeduplicationAgentTrait},
     multi_agent_system::{MultiAIAgentSystem, MultiAIAgentSystemTrait},
@@ -8,6 +8,7 @@ use server::{
     request::AuditRequest,
     response::{AuditErrorResponse, AuditResponse},
 };
+use std::time::Instant;
 mod agents;
 mod config;
 mod models;
@@ -19,9 +20,14 @@ async fn audit_contract(
 ) -> impl Responder {
     println!("Audit called");
 
+    // Measure execution time
+    let start = Instant::now();
+
     let request: AuditRequest = request.into_inner();
 
-    if request.contract_code.is_empty() || request.language.is_empty() {
+    if request.contract_code.trim().is_empty() || request.language.trim().is_empty() {
+        let duration = start.elapsed();
+        println!("Execution Time: {:?}", duration);
         return HttpResponse::BadRequest().json(AuditErrorResponse {
             error: "Request parameters cannot be empty".to_string(),
         });
@@ -55,6 +61,9 @@ async fn audit_contract(
 
     println!("Audit Done");
 
+    let duration = start.elapsed();
+    println!("Execution Time: {:?}", duration);
+
     HttpResponse::Ok().json(AuditResponse { report })
 }
 
@@ -85,11 +94,13 @@ async fn main() -> std::io::Result<()> {
     println!("Starting server {server} on port {port}");
 
     // Initialize the multi-AI agent system as app data
+    // Note: Arc / Mutex for the future
     let system: MultiAIAgentSystem = MultiAIAgentSystem::new();
 
     HttpServer::new(move || {
         App::new()
             .app_data(web::Data::new(system.clone()))
+            .wrap(middleware::Compress::default())
             .route("/", web::get().to(home))
             .route("/audit", web::post().to(audit_contract))
             .service(health_check)
