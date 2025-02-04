@@ -4,7 +4,7 @@ use genai::{chat::ChatOptions, Client, ClientConfig};
 
 use crate::{
     agents::ai_agent::AIAgentTrait,
-    config::config::{MODEL_ENV_KEY_NAME, MODEL_OPENAI},
+    config::config::{MODEL_ENV_KEY_NAME, MODEL_OPENAI, TEMPERATURE},
 };
 
 use super::{
@@ -25,9 +25,8 @@ impl MultiAIAgentSystem {
     fn create_agent_client() -> Arc<Client> {
         let _ = env::var(MODEL_ENV_KEY_NAME).expect("API KEY is not set");
 
-        // Temperature controls how creative/predictive the AI's output is
-        let client_config =
-            ClientConfig::default().with_chat_options(ChatOptions::default().with_temperature(0.0));
+        let client_config = ClientConfig::default()
+            .with_chat_options(ChatOptions::default().with_temperature(TEMPERATURE));
 
         let client = Client::builder().with_config(client_config).build();
 

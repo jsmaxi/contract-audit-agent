@@ -37,6 +37,8 @@ impl FormatDeduplicationAgentTrait for FormatDeduplicationAgent {
             return None;
         }
 
+        println!("Deduplicating vulnerabilities");
+
         let combined_json = json!({
             "All": vulnerabilities
         });
@@ -92,6 +94,7 @@ impl FormatDeduplicationAgentTrait for FormatDeduplicationAgent {
     }
 
     fn process_result(json_dedup: Option<String>) -> VulnerabilityReport {
+        println!("Generating a report");
         if let Some(json_dedup) = json_dedup {
             // Trim
             let trimmed = FormatDeduplicationAgent::trim_json(json_dedup.as_str());
