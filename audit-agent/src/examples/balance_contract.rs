@@ -1,4 +1,4 @@
-pub const CONTRACT_CODE: &str = r#"
+pub const _CONTRACT_CODE: &str = r#"
     pragma solidity ^0.8.0;
     
     contract Vulnerable {
