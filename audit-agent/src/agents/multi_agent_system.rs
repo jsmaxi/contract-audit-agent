@@ -1,12 +1,3 @@
-use std::{collections::HashMap, env, sync::Arc};
-
-use genai::{chat::ChatOptions, Client, ClientConfig};
-
-use crate::{
-    agents::ai_agent::AIAgentTrait,
-    config::config::{MODEL_ENV_KEY_NAME, MODEL_OPENAI, TEMPERATURE},
-};
-
 use super::{
     ai_agent::AIAgent,
     specialized_auditors::{
@@ -15,7 +6,14 @@ use super::{
         create_reentrancy_agent,
     },
 };
+use crate::{
+    agents::ai_agent::AIAgentTrait,
+    config::config::{MODEL_ENV_KEY_NAME, MODEL_OPENAI, TEMPERATURE},
+};
+use genai::{chat::ChatOptions, Client, ClientConfig};
+use std::{collections::HashMap, env, sync::Arc};
 
+#[derive(Clone)]
 pub struct MultiAIAgentSystem {
     agents: Vec<AIAgent>,
     pub client: Arc<Client>, // Arc for thread-safe sharing

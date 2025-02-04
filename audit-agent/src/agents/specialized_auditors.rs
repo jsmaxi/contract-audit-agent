@@ -1,6 +1,5 @@
-use crate::config::config::LANGUAGE;
-
 use super::ai_agent::{AIAgent, AIAgentTrait};
+use crate::config::config::LANGUAGE;
 
 pub fn create_reentrancy_agent() -> AIAgent {
     let role_prompt = format!("
