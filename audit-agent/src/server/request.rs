@@ -8,4 +8,7 @@ pub struct AuditRequest {
 
     #[validate(length(min = 1, message = "Contract language must be specified"))]
     pub language: String,
+
+    #[validate(length(min = 1, message = "AI model must be specified"))]
+    pub model: String,
 }

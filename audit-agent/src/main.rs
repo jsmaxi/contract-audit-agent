@@ -1,4 +1,5 @@
-use actix_web::{middleware, web, App, HttpResponse, HttpServer, Responder};
+use actix_cors::Cors;
+use actix_web::{http, middleware, web, App, HttpResponse, HttpServer, Responder};
 use agents::{
     deduplication_agent::{FormatDeduplicationAgent, FormatDeduplicationAgentTrait},
     multi_agent_system::{MultiAIAgentSystem, MultiAIAgentSystemTrait},
@@ -25,7 +26,10 @@ async fn audit_contract(
 
     let request: AuditRequest = request.into_inner();
 
-    if request.contract_code.trim().is_empty() || request.language.trim().is_empty() {
+    if request.contract_code.trim().is_empty()
+        || request.language.trim().is_empty()
+        || request.model.trim().is_empty()
+    {
         let duration = start.elapsed();
         println!("Execution Time: {:?}", duration);
         return HttpResponse::BadRequest().json(AuditErrorResponse {
@@ -77,7 +81,7 @@ async fn health_check() -> HttpResponse {
 async fn home() -> impl Responder {
     HttpResponse::Ok()
         .content_type("text/plain")
-        .body("Welcome. Please call '/audit' endpoint with contract code string and contract language string.")
+        .body("Welcome. Please call (post) '/audit' endpoint with contract code string and contract language string.")
 }
 
 async fn not_found() -> HttpResponse {
@@ -97,10 +101,24 @@ async fn main() -> std::io::Result<()> {
     // Note: Arc / Mutex for the future
     let system: MultiAIAgentSystem = MultiAIAgentSystem::new();
 
+    // Allowed caller
+    let allowed_origin = "http://localhost:3000";
+
     HttpServer::new(move || {
+        let cors = Cors::default()
+            .allowed_origin(allowed_origin)
+            .allowed_origin_fn(|origin, _req_head| origin.as_bytes().ends_with(b".rust-lang.org"))
+            .allowed_methods(vec!["GET", "POST"])
+            .allowed_headers(vec![
+                http::header::AUTHORIZATION,
+                http::header::CONTENT_TYPE,
+            ])
+            .max_age(3600);
+
         App::new()
             .app_data(web::Data::new(system.clone()))
             .wrap(middleware::Compress::default())
+            .wrap(cors) // Apply the CORS middleware
             .route("/", web::get().to(home))
             .route("/audit", web::post().to(audit_contract))
             .service(health_check)

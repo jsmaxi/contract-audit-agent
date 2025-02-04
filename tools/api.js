@@ -16,6 +16,7 @@ const request = {
     line
     `,
   language: "Test",
+  model: "gpt-4o-mini",
 };
 
 const postAudit = (request) => {
