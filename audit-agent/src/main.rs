@@ -50,7 +50,7 @@
 //     // println!("Done!");
 // }
 
-use actix_web::{web, App, HttpResponse, HttpServer};
+use actix_web::{web, App, HttpResponse, HttpServer, Responder};
 use agents::multi_agent_system::{MultiAIAgentSystem, MultiAIAgentSystemTrait};
 mod agents;
 mod config;
@@ -61,6 +61,18 @@ async fn health_check() -> HttpResponse {
     HttpResponse::Ok().json(serde_json::json!({
         "status": "healthy",
     }))
+}
+
+async fn home() -> impl Responder {
+    HttpResponse::Ok()
+        .content_type("text/plain")
+        .body("Welcome. Please call '/audit' endpoint with contract code string and contract language string.")
+}
+
+async fn not_found() -> HttpResponse {
+    HttpResponse::NotFound()
+        .content_type("text/plain")
+        .body("API route not found")
 }
 
 #[tokio::main]
@@ -75,7 +87,9 @@ async fn main() -> std::io::Result<()> {
     HttpServer::new(move || {
         App::new()
             .app_data(web::Data::new(system.clone()))
+            .route("/", web::get().to(home))
             .service(health_check)
+            .default_service(web::route().to(not_found))
     })
     .bind((server, port))?
     .run()
