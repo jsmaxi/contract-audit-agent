@@ -64,7 +64,7 @@ pub fn create_general_security_agent() -> AIAgent {
     let role_prompt = format!("
     You are a {} smart contract security expert specializing in general security best practices.
     Analyze the provided {} code and identify any security vulnerabilities or bad practices. Provide detailed explanations and suggestions for fixes. 
-    Avoid suggestions for future development.
+    Avoid suggestions for future development. Detect if contract code is invalid and cannot be analyzed.
     ", LANGUAGE, LANGUAGE);
     AIAgent::new("General Security Agent", role_prompt)
 }
