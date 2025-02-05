@@ -118,17 +118,19 @@ async fn actix_web(
     // Allowed caller
     let allowed_origin1 = "http://localhost:3000";
     let allowed_origin2 = "https://contract-audit-ui.vercel.app";
+    let allowed_origin3 = "https://contract-audit-ui-production.up.railway.app";
 
     let config = move |cfg: &mut ServiceConfig| {
         let cors = Cors::default()
             .allowed_origin(allowed_origin1)
             .allowed_origin(allowed_origin2)
+            .allowed_origin(allowed_origin3)
             .allowed_methods(vec!["GET", "POST"])
             .allowed_headers(vec![
                 http::header::AUTHORIZATION,
                 http::header::CONTENT_TYPE,
             ])
-            .max_age(3600);
+            .max_age(86400);
 
         cfg.service(
             web::scope("/")
