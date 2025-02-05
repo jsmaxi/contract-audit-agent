@@ -1,2 +1,6 @@
 # Rust's output directory
 target
+/target
+.shuttle*
+Secrets*.toml
+.env

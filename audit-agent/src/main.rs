@@ -1,5 +1,6 @@
 use actix_cors::Cors;
-use actix_web::{http, middleware, web, App, HttpResponse, HttpServer, Responder};
+use actix_web::{http, middleware, web, /*App,*/ HttpResponse, /*HttpServer,*/ Responder,};
+use actix_web::{/*get,*/ web::ServiceConfig};
 use agents::{
     deduplication_agent::{FormatDeduplicationAgent, FormatDeduplicationAgentTrait},
     multi_agent_system::{MultiAIAgentSystem, MultiAIAgentSystemTrait},
@@ -9,12 +10,16 @@ use server::{
     request::AuditRequest,
     response::{AuditErrorResponse, AuditResponse},
 };
+use shuttle_actix_web::ShuttleActixWeb;
+use shuttle_runtime::SecretStore;
+use std::env;
 use std::time::Instant;
 mod agents;
 mod config;
 mod models;
 mod server;
 
+#[actix_web::post("/audit")]
 async fn audit_contract(
     request: web::Json<AuditRequest>,
     system: web::Data<MultiAIAgentSystem>,
@@ -78,6 +83,7 @@ async fn health_check() -> HttpResponse {
     }))
 }
 
+#[actix_web::get("/")]
 async fn home() -> impl Responder {
     HttpResponse::Ok()
         .content_type("text/plain")
@@ -90,24 +96,33 @@ async fn not_found() -> HttpResponse {
         .body("API route not found")
 }
 
-#[tokio::main]
-async fn main() -> std::io::Result<()> {
-    let port = 8080;
-    let server = "127.0.0.1";
+#[shuttle_runtime::main]
+async fn actix_web(
+    #[shuttle_runtime::Secrets] secrets: SecretStore,
+) -> ShuttleActixWeb<impl FnOnce(&mut ServiceConfig) + Send + Clone + 'static> {
+    // let port = 8080;
+    // let server = "127.0.0.1";
+    // println!("Starting server {server} on port {port}");
 
-    println!("Starting server {server} on port {port}");
+    // Get secret from server
+    let api_key: String = secrets
+        .get("OPENAI_API_KEY")
+        .expect("Secret API KEY is not set");
+    // Set environment variable for GenAI
+    std::env::set_var("OPENAI_API_KEY", api_key);
 
     // Initialize the multi-AI agent system as app data
     // Note: Arc / Mutex for the future
     let system: MultiAIAgentSystem = MultiAIAgentSystem::new();
 
     // Allowed caller
-    let allowed_origin = "http://localhost:3000";
+    let allowed_origin1 = "http://localhost:3000";
+    let allowed_origin2 = "https://contract-audit-ui.vercel.app";
 
-    HttpServer::new(move || {
+    let config = move |cfg: &mut ServiceConfig| {
         let cors = Cors::default()
-            .allowed_origin(allowed_origin)
-            .allowed_origin_fn(|origin, _req_head| origin.as_bytes().ends_with(b".rust-lang.org"))
+            .allowed_origin(allowed_origin1)
+            .allowed_origin(allowed_origin2)
             .allowed_methods(vec!["GET", "POST"])
             .allowed_headers(vec![
                 http::header::AUTHORIZATION,
@@ -115,16 +130,40 @@ async fn main() -> std::io::Result<()> {
             ])
             .max_age(3600);
 
-        App::new()
-            .app_data(web::Data::new(system.clone()))
-            .wrap(middleware::Compress::default())
-            .wrap(cors) // Apply the CORS middleware
-            .route("/", web::get().to(home))
-            .route("/audit", web::post().to(audit_contract))
-            .service(health_check)
-            .default_service(web::route().to(not_found))
-    })
-    .bind((server, port))?
-    .run()
-    .await
+        cfg.service(
+            web::scope("/")
+                .wrap(cors) // Apply the CORS middleware
+                .wrap(middleware::Compress::default()),
+        )
+        .app_data(web::Data::new(system.clone()))
+        .service(home)
+        .service(audit_contract)
+        .service(health_check)
+        .default_service(web::route().to(not_found));
+    };
+
+    Ok(config.into())
+
+    // HttpServer::new(move || {
+    //     let cors = Cors::default()
+    //         .allowed_origin(allowed_origin)
+    //         .allowed_methods(vec!["GET", "POST"])
+    //         .allowed_headers(vec![
+    //             http::header::AUTHORIZATION,
+    //             http::header::CONTENT_TYPE,
+    //         ])
+    //         .max_age(3600);
+
+    //     App::new()
+    //         .app_data(web::Data::new(system.clone()))
+    //         .wrap(middleware::Compress::default())
+    //         .wrap(cors) // Apply the CORS middleware
+    //         .route("/", web::get().to(home))
+    //         .route("/audit", web::post().to(audit_contract))
+    //         .service(health_check)
+    //         .default_service(web::route().to(not_found))
+    // })
+    // .bind((server, port))?
+    // .run()
+    // .await
 }
