@@ -5,7 +5,7 @@ use agents::{
     deduplication_agent::{FormatDeduplicationAgent, FormatDeduplicationAgentTrait},
     multi_agent_system::{MultiAIAgentSystem, MultiAIAgentSystemTrait},
 };
-use config::config::VALID_MODELS;
+use config::config::{VALID_LANGUAGES, VALID_MODELS};
 use models::report::VulnerabilityReport;
 use server::{
     request::AuditRequest,
@@ -22,7 +22,7 @@ mod server;
 
 #[actix_web::post("/audit")]
 async fn audit_contract(request: web::Json<AuditRequest>) -> impl Responder {
-    println!("Audit called [{}]", request.model);
+    println!("Audit called [{}] [{}]", request.model, request.language);
 
     // Measure execution time
     let start = Instant::now();
@@ -48,12 +48,21 @@ async fn audit_contract(request: web::Json<AuditRequest>) -> impl Responder {
         });
     }
 
+    if !VALID_LANGUAGES.contains(&request.language.as_str()) {
+        let duration = start.elapsed();
+        println!("Execution Time: {:?}", duration);
+        return HttpResponse::BadRequest().json(AuditErrorResponse {
+            error: "Selected smart contract language is not supported".to_string(),
+        });
+    }
+
     // Initialize the multi-AI agent system. Arc / Mutex for the future
-    let system: MultiAIAgentSystem = MultiAIAgentSystem::new(request.model.clone());
+    let system: MultiAIAgentSystem =
+        MultiAIAgentSystem::new(request.model.clone(), &request.language);
 
     // Analyze the contract in parallel
     let results = system
-        .analyze_contract(&request.contract_code, &request.model)
+        .analyze_contract(&request.contract_code, &request.model, &request.language)
         .await;
 
     // Print the intermediate results (uncomment if debugging)
@@ -67,7 +76,12 @@ async fn audit_contract(request: web::Json<AuditRequest>) -> impl Responder {
     let fd_agent = FormatDeduplicationAgent::new();
     let values: Vec<&String> = results.values().collect();
     let json_dedup = fd_agent
-        .format_and_deduplicate(values, system.client.clone(), &request.model.clone())
+        .format_and_deduplicate(
+            values,
+            system.client.clone(),
+            &request.model.clone(),
+            &request.language,
+        )
         .await;
 
     // Print after deduplication (uncomment if debugging)

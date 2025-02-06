@@ -1,4 +1,3 @@
-use crate::config::config::LANGUAGE;
 use genai::{
     chat::{ChatMessage, ChatRequest},
     Client,
@@ -12,6 +11,7 @@ pub(crate) trait AIAgentTrait {
         contract_code: &str,
         client: Arc<Client>,
         model: &str,
+        language: &str,
     ) -> Option<String>;
 }
 
@@ -22,7 +22,7 @@ pub(crate) struct AIAgent {
 }
 
 impl AIAgent {
-    fn get_output_prompt(&self) -> String {
+    fn get_output_prompt(&self, language: &str) -> String {
         format!(
             r#"Return your findings in the following JSON format:
             {{
@@ -39,7 +39,7 @@ impl AIAgent {
             }}
             If no vulnerabilities are found, return an empty array.
             If the input is invalid {} code, the output should be a JSON object with an error message."#,
-            LANGUAGE
+            language
         )
     }
 }
@@ -57,12 +57,13 @@ impl AIAgentTrait for AIAgent {
         contract_code: &str,
         client: Arc<Client>,
         model: &str,
+        language: &str,
     ) -> Option<String> {
         let prompt: String = format!(
             "{} {} \n\nAnalyze this {} code for vulnerabilities:\n\n{}",
             self.prompt,
-            self.get_output_prompt(),
-            LANGUAGE,
+            self.get_output_prompt(language),
+            language,
             contract_code
         );
 

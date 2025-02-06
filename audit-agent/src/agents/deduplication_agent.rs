@@ -1,4 +1,4 @@
-use crate::{config::config::LANGUAGE, models::report::VulnerabilityReport};
+use crate::models::report::VulnerabilityReport;
 use genai::{
     chat::{ChatMessage, ChatRequest},
     Client,
@@ -15,6 +15,7 @@ pub(crate) trait FormatDeduplicationAgentTrait {
         vulnerabilities: Vec<&'a String>,
         client: Arc<Client>,
         model: &str,
+        language: &str,
     ) -> Option<String>;
     fn trim_json(input: &str) -> &str;
     fn process_result(json_dedup: Option<String>) -> VulnerabilityReport;
@@ -30,6 +31,7 @@ impl FormatDeduplicationAgentTrait for FormatDeduplicationAgent {
         vulnerabilities: Vec<&'a String>,
         client: Arc<Client>,
         model: &str,
+        language: &str,
     ) -> Option<String> {
         if vulnerabilities.is_empty() {
             println!("Empty list of vulnerabilities");
@@ -70,7 +72,7 @@ impl FormatDeduplicationAgentTrait for FormatDeduplicationAgent {
             {}
 
             Return only the JSON, no additional text."#,
-            LANGUAGE,
+            language,
             combined_json.to_string(),
             format,
         );

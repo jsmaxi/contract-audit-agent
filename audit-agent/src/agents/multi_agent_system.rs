@@ -41,27 +41,37 @@ impl MultiAIAgentSystem {
 }
 
 pub trait MultiAIAgentSystemTrait {
-    fn new(model: String) -> Self;
-    async fn analyze_contract(&self, contract_code: &str, model: &str) -> HashMap<String, String>;
+    fn new(model: String, language: &str) -> Self;
+    async fn analyze_contract(
+        &self,
+        contract_code: &str,
+        model: &str,
+        language: &str,
+    ) -> HashMap<String, String>;
 }
 
 impl MultiAIAgentSystemTrait for MultiAIAgentSystem {
-    fn new(model: String) -> Self {
+    fn new(model: String, language: &str) -> Self {
         MultiAIAgentSystem {
             agents: vec![
-                create_reentrancy_agent(),
-                create_integer_overflow_agent(),
-                create_access_control_agent(),
-                create_events_agent(),
-                create_contract_validation_agent(),
-                create_gas_agent(),
-                create_general_security_agent(),
+                create_reentrancy_agent(language),
+                create_integer_overflow_agent(language),
+                create_access_control_agent(language),
+                create_events_agent(language),
+                create_contract_validation_agent(language),
+                create_gas_agent(language),
+                create_general_security_agent(language),
             ],
             client: Self::create_agent_client(model.as_str()),
         }
     }
 
-    async fn analyze_contract(&self, contract_code: &str, model: &str) -> HashMap<String, String> {
+    async fn analyze_contract(
+        &self,
+        contract_code: &str,
+        model: &str,
+        language: &str,
+    ) -> HashMap<String, String> {
         let mut tasks = Vec::new();
 
         // Spawn a task for each agent to analyze the contract in parallel
@@ -70,10 +80,14 @@ impl MultiAIAgentSystemTrait for MultiAIAgentSystem {
             let client = Arc::clone(&self.client);
             let agent_name = agent.name.clone();
             let model = model.to_string();
+            let language = language.to_string();
 
             tasks.push(tokio::spawn(async move {
                 println!("Running {} ...", agent_name);
-                match agent.analyze(&contract_code, client, &model).await {
+                match agent
+                    .analyze(&contract_code, client, &model, &language)
+                    .await
+                {
                     Some(response) => Some((agent_name, response)),
                     None => None,
                 }
