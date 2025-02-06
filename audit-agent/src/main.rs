@@ -5,6 +5,7 @@ use agents::{
     deduplication_agent::{FormatDeduplicationAgent, FormatDeduplicationAgentTrait},
     multi_agent_system::{MultiAIAgentSystem, MultiAIAgentSystemTrait},
 };
+use config::config::VALID_MODELS;
 use models::report::VulnerabilityReport;
 use server::{
     request::AuditRequest,
@@ -20,11 +21,8 @@ mod models;
 mod server;
 
 #[actix_web::post("/audit")]
-async fn audit_contract(
-    request: web::Json<AuditRequest>,
-    system: web::Data<MultiAIAgentSystem>,
-) -> impl Responder {
-    println!("Audit called");
+async fn audit_contract(request: web::Json<AuditRequest>) -> impl Responder {
+    println!("Audit called [{}]", request.model);
 
     // Measure execution time
     let start = Instant::now();
@@ -42,8 +40,21 @@ async fn audit_contract(
         });
     }
 
+    if !VALID_MODELS.contains(&request.model.as_str()) {
+        let duration = start.elapsed();
+        println!("Execution Time: {:?}", duration);
+        return HttpResponse::BadRequest().json(AuditErrorResponse {
+            error: "Selected AI model is not supported".to_string(),
+        });
+    }
+
+    // Initialize the multi-AI agent system. Arc / Mutex for the future
+    let system: MultiAIAgentSystem = MultiAIAgentSystem::new(request.model.clone());
+
     // Analyze the contract in parallel
-    let results = system.analyze_contract(&request.contract_code).await;
+    let results = system
+        .analyze_contract(&request.contract_code, &request.model)
+        .await;
 
     // Print the intermediate results (uncomment if debugging)
     // for (agent_name, output) in results {
@@ -56,7 +67,7 @@ async fn audit_contract(
     let fd_agent = FormatDeduplicationAgent::new();
     let values: Vec<&String> = results.values().collect();
     let json_dedup = fd_agent
-        .format_and_deduplicate(values, system.client.clone())
+        .format_and_deduplicate(values, system.client.clone(), &request.model.clone())
         .await;
 
     // Print after deduplication (uncomment if debugging)
@@ -84,10 +95,10 @@ async fn health_check() -> HttpResponse {
 }
 
 #[actix_web::get("/")]
-async fn home() -> impl Responder {
+async fn home() -> HttpResponse {
     HttpResponse::Ok()
         .content_type("text/plain")
-        .body("Welcome. Please call (post) '/audit' endpoint with contract code string and contract language string.")
+        .body("Welcome. Please call (post) '/audit' endpoint with contract code string, contract language string and agent model string.")
 }
 
 async fn not_found() -> HttpResponse {
@@ -111,10 +122,6 @@ async fn actix_web(
     // Set environment variable for GenAI
     std::env::set_var("OPENAI_API_KEY", api_key);
 
-    // Initialize the multi-AI agent system as app data
-    // Note: Arc / Mutex for the future
-    let system: MultiAIAgentSystem = MultiAIAgentSystem::new();
-
     // Allowed caller
     let allowed_origin1 = "http://localhost:3000";
     let allowed_origin2 = "https://contract-audit-ui.vercel.app";
@@ -137,7 +144,6 @@ async fn actix_web(
                 .wrap(cors) // Apply the CORS middleware
                 .wrap(middleware::Compress::default()),
         )
-        .app_data(web::Data::new(system.clone()))
         .service(home)
         .service(audit_contract)
         .service(health_check)

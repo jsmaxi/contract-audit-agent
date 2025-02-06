@@ -1,7 +1,4 @@
-use crate::{
-    config::config::{LANGUAGE, MODEL_OPENAI},
-    models::report::VulnerabilityReport,
-};
+use crate::{config::config::LANGUAGE, models::report::VulnerabilityReport};
 use genai::{
     chat::{ChatMessage, ChatRequest},
     Client,
@@ -17,6 +14,7 @@ pub(crate) trait FormatDeduplicationAgentTrait {
         &self,
         vulnerabilities: Vec<&'a String>,
         client: Arc<Client>,
+        model: &str,
     ) -> Option<String>;
     fn trim_json(input: &str) -> &str;
     fn process_result(json_dedup: Option<String>) -> VulnerabilityReport;
@@ -31,6 +29,7 @@ impl FormatDeduplicationAgentTrait for FormatDeduplicationAgent {
         &self,
         vulnerabilities: Vec<&'a String>,
         client: Arc<Client>,
+        model: &str,
     ) -> Option<String> {
         if vulnerabilities.is_empty() {
             println!("Empty list of vulnerabilities");
@@ -77,7 +76,6 @@ impl FormatDeduplicationAgentTrait for FormatDeduplicationAgent {
         );
 
         let chat_req = ChatRequest::new(vec![ChatMessage::system(prompt)]);
-        let model = MODEL_OPENAI;
 
         match client.exec_chat(model, chat_req.clone(), None).await {
             Ok(response) => response.content_text_into_string(),

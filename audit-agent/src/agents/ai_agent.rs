@@ -1,4 +1,4 @@
-use crate::config::config::{LANGUAGE, MODEL_OPENAI};
+use crate::config::config::LANGUAGE;
 use genai::{
     chat::{ChatMessage, ChatRequest},
     Client,
@@ -7,7 +7,12 @@ use std::sync::Arc;
 
 pub(crate) trait AIAgentTrait {
     fn new(name: &str, prompt: String) -> Self;
-    async fn analyze(&self, contract_code: &str, client: Arc<Client>) -> Option<String>;
+    async fn analyze(
+        &self,
+        contract_code: &str,
+        client: Arc<Client>,
+        model: &str,
+    ) -> Option<String>;
 }
 
 #[derive(Clone)]
@@ -47,7 +52,12 @@ impl AIAgentTrait for AIAgent {
         }
     }
 
-    async fn analyze(&self, contract_code: &str, client: Arc<Client>) -> Option<String> {
+    async fn analyze(
+        &self,
+        contract_code: &str,
+        client: Arc<Client>,
+        model: &str,
+    ) -> Option<String> {
         let prompt: String = format!(
             "{} {} \n\nAnalyze this {} code for vulnerabilities:\n\n{}",
             self.prompt,
@@ -57,7 +67,6 @@ impl AIAgentTrait for AIAgent {
         );
 
         let chat_req = ChatRequest::new(vec![ChatMessage::system(prompt)]);
-        let model = MODEL_OPENAI;
 
         match client.exec_chat(model, chat_req.clone(), None).await {
             Ok(response) => response.content_text_into_string(),
