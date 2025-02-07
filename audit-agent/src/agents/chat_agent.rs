@@ -45,6 +45,7 @@ impl ChatAgentTrait for ChatAgent {
 
         let prompt: String = format!(
             r#"You are blockchain expert specializing in smart contracts. 
+            You only answer questions related to smart contracts, blockchain and cryptocurrencies, you have no expertize in any other unrelated topic.
             Answer this question concisely and clearly:
 
             {}
