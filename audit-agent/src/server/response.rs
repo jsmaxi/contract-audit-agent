@@ -15,3 +15,8 @@ pub struct AuditErrorResponse {
 pub struct FixResponse {
     pub code: String,
 }
+
+#[derive(Debug, Serialize)]
+pub struct ChatResponse {
+    pub text: String,
+}

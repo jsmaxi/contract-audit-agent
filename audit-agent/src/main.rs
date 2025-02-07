@@ -1,6 +1,7 @@
 use actix_cors::Cors;
 use actix_web::{http, middleware, web, /*App,*/ HttpResponse, /*HttpServer,*/ Responder,};
 use actix_web::{/*get,*/ web::ServiceConfig};
+use agents::chat_agent::{ChatAgent, ChatAgentTrait};
 use agents::fixing_agent::{FixingAgent, FixingAgentTrait};
 use agents::{
     deduplication_agent::{FormatDeduplicationAgent, FormatDeduplicationAgentTrait},
@@ -8,8 +9,8 @@ use agents::{
 };
 use config::config::{VALID_LANGUAGES, VALID_MODELS};
 use models::report::VulnerabilityReport;
-use server::request::FixRequest;
-use server::response::FixResponse;
+use server::request::{ChatRequest, FixRequest};
+use server::response::{ChatResponse, FixResponse};
 use server::{
     request::AuditRequest,
     response::{AuditErrorResponse, AuditResponse},
@@ -165,6 +166,49 @@ async fn fix_contract(request: web::Json<FixRequest>) -> impl Responder {
     }
 }
 
+#[actix_web::post("/chat")]
+async fn chat_ai(request: web::Json<ChatRequest>) -> impl Responder {
+    println!("Chat called [{}]", request.model);
+
+    // Measure execution time
+    let start = Instant::now();
+
+    let request: ChatRequest = request.into_inner();
+
+    if request.text.trim().is_empty() || request.model.trim().is_empty() {
+        let duration = start.elapsed();
+        println!("Execution Time: {:?}", duration);
+        return HttpResponse::BadRequest().json(AuditErrorResponse {
+            error: "Request parameters cannot be empty".to_string(),
+        });
+    }
+
+    if !VALID_MODELS.contains(&request.model.as_str()) {
+        let duration = start.elapsed();
+        println!("Execution Time: {:?}", duration);
+        return HttpResponse::BadRequest().json(AuditErrorResponse {
+            error: "Selected AI model is not supported".to_string(),
+        });
+    }
+
+    let ai_response: Option<String> = ChatAgent::chat(request.text, request.model.as_str()).await;
+
+    // Print the result (uncomment if debugging)
+    println!("{}", ai_response.clone().unwrap_or("None".to_string()));
+
+    println!("Chat Done");
+
+    let duration = start.elapsed();
+    println!("Execution Time: {:?}", duration);
+
+    match ai_response {
+        Some(t) => HttpResponse::Ok().json(ChatResponse { text: t }),
+        None => HttpResponse::InternalServerError().json(ChatResponse {
+            text: "No response from AI".to_string(),
+        }),
+    }
+}
+
 #[actix_web::get("/health")]
 async fn health_check() -> HttpResponse {
     HttpResponse::Ok().json(serde_json::json!({
@@ -225,6 +269,7 @@ async fn actix_web(
         .service(home)
         .service(audit_contract)
         .service(fix_contract)
+        .service(chat_ai)
         .service(health_check)
         .default_service(web::route().to(not_found));
     };

@@ -28,3 +28,12 @@ pub struct FixRequest {
 
     pub vulnerabilities: Vec<Vulnerability>,
 }
+
+#[derive(Debug, Deserialize, Validate)]
+pub struct ChatRequest {
+    #[validate(length(min = 1, message = "Chat text cannot be empty"))]
+    pub text: String,
+
+    #[validate(length(min = 1, message = "AI model must be specified"))]
+    pub model: String,
+}
