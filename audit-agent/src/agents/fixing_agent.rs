@@ -39,6 +39,18 @@ impl FixingAgent {
 
         Arc::new(client)
     }
+
+    fn remove_code_fences(code: String) -> String {
+        let lines: Vec<&str> = code.lines().collect();
+        if lines.len() >= 2
+            && lines.first().map_or(false, |l| l.trim().starts_with("```"))
+            && lines.last().map_or(false, |l| l.trim().starts_with("```"))
+        {
+            lines[1..lines.len() - 1].join("\n")
+        } else {
+            code
+        }
+    }
 }
 
 impl FixingAgentTrait for FixingAgent {
@@ -86,7 +98,10 @@ impl FixingAgentTrait for FixingAgent {
         let chat_req = ChatRequest::new(vec![ChatMessage::system(prompt)]);
 
         match client.exec_chat(model, chat_req.clone(), None).await {
-            Ok(response) => response.content_text_into_string(),
+            Ok(response) => match response.content_text_into_string() {
+                Some(s) => Some(FixingAgent::remove_code_fences(s)),
+                None => None,
+            },
             Err(_e) => None,
         }
     }
