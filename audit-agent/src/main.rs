@@ -1,12 +1,15 @@
 use actix_cors::Cors;
 use actix_web::{http, middleware, web, /*App,*/ HttpResponse, /*HttpServer,*/ Responder,};
 use actix_web::{/*get,*/ web::ServiceConfig};
+use agents::fixing_agent::{FixingAgent, FixingAgentTrait};
 use agents::{
     deduplication_agent::{FormatDeduplicationAgent, FormatDeduplicationAgentTrait},
     multi_agent_system::{MultiAIAgentSystem, MultiAIAgentSystemTrait},
 };
 use config::config::{VALID_LANGUAGES, VALID_MODELS};
 use models::report::VulnerabilityReport;
+use server::request::FixRequest;
+use server::response::FixResponse;
 use server::{
     request::AuditRequest,
     response::{AuditErrorResponse, AuditResponse},
@@ -101,6 +104,67 @@ async fn audit_contract(request: web::Json<AuditRequest>) -> impl Responder {
     HttpResponse::Ok().json(AuditResponse { report })
 }
 
+#[actix_web::post("/fix")]
+async fn fix_contract(request: web::Json<FixRequest>) -> impl Responder {
+    println!("Fix called [{}] [{}]", request.model, request.language);
+
+    // Measure execution time
+    let start = Instant::now();
+
+    let request: FixRequest = request.into_inner();
+
+    if request.contract_code.trim().is_empty()
+        || request.language.trim().is_empty()
+        || request.model.trim().is_empty()
+        || request.vulnerabilities.is_empty()
+    {
+        let duration = start.elapsed();
+        println!("Execution Time: {:?}", duration);
+        return HttpResponse::BadRequest().json(AuditErrorResponse {
+            error: "Request parameters cannot be empty".to_string(),
+        });
+    }
+
+    if !VALID_MODELS.contains(&request.model.as_str()) {
+        let duration = start.elapsed();
+        println!("Execution Time: {:?}", duration);
+        return HttpResponse::BadRequest().json(AuditErrorResponse {
+            error: "Selected AI model is not supported".to_string(),
+        });
+    }
+
+    if !VALID_LANGUAGES.contains(&request.language.as_str()) {
+        let duration = start.elapsed();
+        println!("Execution Time: {:?}", duration);
+        return HttpResponse::BadRequest().json(AuditErrorResponse {
+            error: "Selected smart contract language is not supported".to_string(),
+        });
+    }
+
+    let fixed_code: Option<String> = FixingAgent::fix(
+        request.contract_code,
+        request.vulnerabilities,
+        request.model.as_str(),
+        &request.language,
+    )
+    .await;
+
+    // Print the result (uncomment if debugging)
+    println!("{}", fixed_code.clone().unwrap_or("None".to_string()));
+
+    println!("Fix Done");
+
+    let duration = start.elapsed();
+    println!("Execution Time: {:?}", duration);
+
+    match fixed_code {
+        Some(f) => HttpResponse::Ok().json(FixResponse { code: f }),
+        None => HttpResponse::InternalServerError().json(AuditErrorResponse {
+            error: "No fixed code returned".to_string(),
+        }),
+    }
+}
+
 #[actix_web::get("/health")]
 async fn health_check() -> HttpResponse {
     HttpResponse::Ok().json(serde_json::json!({
@@ -160,6 +224,7 @@ async fn actix_web(
         )
         .service(home)
         .service(audit_contract)
+        .service(fix_contract)
         .service(health_check)
         .default_service(web::route().to(not_found));
     };

@@ -10,3 +10,8 @@ pub struct AuditResponse {
 pub struct AuditErrorResponse {
     pub error: String,
 }
+
+#[derive(Debug, Serialize)]
+pub struct FixResponse {
+    pub code: String,
+}
