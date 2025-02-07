@@ -3,7 +3,7 @@ use super::{
     specialized_auditors::{
         create_access_control_agent, create_contract_validation_agent, create_events_agent,
         create_gas_agent, create_general_security_agent, create_integer_overflow_agent,
-        create_reentrancy_agent,
+        create_logic_agent, create_reentrancy_agent,
     },
 };
 use crate::{
@@ -60,6 +60,7 @@ impl MultiAIAgentSystemTrait for MultiAIAgentSystem {
                 create_events_agent(language),
                 create_contract_validation_agent(language),
                 create_gas_agent(language),
+                create_logic_agent(language),
                 create_general_security_agent(language),
             ],
             client: Self::create_agent_client(model.as_str()),

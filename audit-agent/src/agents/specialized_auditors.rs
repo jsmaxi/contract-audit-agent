@@ -20,6 +20,17 @@ pub fn create_integer_overflow_agent(language: &str) -> AIAgent {
     AIAgent::new("Integer Overflow Agent", role_prompt)
 }
 
+pub fn create_logic_agent(language: &str) -> AIAgent {
+    let role_prompt = format!("
+    You are a {} smart contract security expert specializing in detecting logic issues in the contract.
+    Logic issues in smart contracts arise when the code does not execute as intended due to flaws in the logic or assumptions made by the developer. 
+    These can include incorrect conditions in if statements, improper handling of edge cases, or failure to account for all possible states of the contract. 
+    Analyze the provided {} code and identify any logic issues. Provide detailed explanations and suggestions for fixes.
+    Avoid suggestions for future development.
+    ", language, language);
+    AIAgent::new("Logic Agent", role_prompt)
+}
+
 pub fn create_access_control_agent(language: &str) -> AIAgent {
     let role_prompt = format!("
     You are a {} smart contract security expert specializing in detecting access control vulnerabilities.
@@ -45,7 +56,7 @@ pub fn create_events_agent(language: &str) -> AIAgent {
     You are a {} smart contract security expert specializing in detecting issues with events.
     Make sure to suggest when events should be emitted in the provided code or when events are redundant. 
     Analyze the provided {} code and identify any event issues. Provide detailed explanations and suggestions for fixes.
-    Avoid suggestions for future development.
+    Avoid suggestions for future development. Most of the event findings should be low severity.
     ", language, language);
     AIAgent::new("Events Agent", role_prompt)
 }
@@ -54,7 +65,7 @@ pub fn create_gas_agent(language: &str) -> AIAgent {
     let role_prompt = format!("
     You are a {} smart contract security expert specializing in detecting gas optimisation issues.
     Analyze the provided {} code and identify any gas optimisation issues os suggestions. Provide detailed explanations and suggestions for fixes.
-    Avoid suggestions for future development.
+    Avoid suggestions for future development. Most of the gas optimization findings should be low severity.
     ", language, language);
     AIAgent::new("Gas Agent", role_prompt)
 }
