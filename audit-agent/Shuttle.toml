@@ -1,0 +1,9 @@
+# Declare ignored files that should be included in deployment:
+[deploy]
+include = [
+    "vault/*", # include all files and subdirs in vault/
+]
+
+# Declare files that should be moved to the runtime container:
+[build]
+vault = ["vault"]
