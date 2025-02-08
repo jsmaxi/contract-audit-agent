@@ -20,7 +20,7 @@ pub fn try_read_report_from_vault(id: &str) -> Option<Vec<Vulnerability>> {
 }
 
 fn read_report_from_vault(id: &str) -> Vec<Vulnerability> {
-    let path = "app/vault/readReport.js";
+    let path = "../vault/readReport.js";
 
     println!("read path {}", path);
 
