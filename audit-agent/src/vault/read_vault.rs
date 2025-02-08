@@ -19,7 +19,13 @@ pub fn try_read_report_from_vault(id: &str) -> Option<Vec<Vulnerability>> {
 }
 
 fn read_report_from_vault(id: &str) -> Vec<Vulnerability> {
-    let vault_path = "/vault/readReport.js";
+    let mut exe_path = std::env::current_exe().unwrap();
+    exe_path.pop(); // Remove the executable name
+    exe_path.push("vault");
+    exe_path.push("readReport.js");
+    // let vault_path = "/vault/readReport.js";
+
+    let vault_path = exe_path.into_os_string().into_string().unwrap();
 
     println!("read path {}", vault_path);
 
