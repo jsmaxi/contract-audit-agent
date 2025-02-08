@@ -1,4 +1,5 @@
 use crate::models::report::VulnerabilityReport;
+use std::env;
 use std::panic::catch_unwind;
 use std::process::{Command, Output};
 
@@ -19,7 +20,8 @@ pub fn try_write_report_to_vault(report: &VulnerabilityReport) -> Option<String>
 }
 
 fn write_report_to_vault(report: &VulnerabilityReport) -> String {
-    let path = "../../vault/writeReport.js";
+    let path_string = env::current_dir().unwrap().to_string_lossy().into_owned();
+    let path = format!("{}{}", path_string, "/vault/writeReport.js");
 
     println!("write path {}", path);
 
