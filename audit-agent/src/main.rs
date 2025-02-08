@@ -312,10 +312,6 @@ async fn actix_web(
         println!("Failed to read directory contents.");
     }
 
-    let root_path = Path::new("/");
-    println!("Folder structure for: {:?}", root_path);
-    print_folder_structure(root_path, 0);
-
     // Allowed caller
     let allowed_origin1 = "http://localhost:3000";
     let allowed_origin2 = "https://contract-audit-ui.vercel.app";
