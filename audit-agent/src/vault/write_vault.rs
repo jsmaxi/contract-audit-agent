@@ -19,7 +19,20 @@ pub fn try_write_report_to_vault(report: &VulnerabilityReport) -> Option<String>
 }
 
 fn write_report_to_vault(report: &VulnerabilityReport) -> String {
-    let _output = Command::new("node").arg("--version").output();
+    let version = Command::new("node").arg("--version").output().unwrap();
+
+    if version.status.success() {
+        let stdout: String = String::from_utf8(version.stdout)
+            .unwrap()
+            .trim()
+            .to_string();
+        println!("Version. {}", stdout);
+    } else {
+        println!(
+            "Version failed: {}",
+            String::from_utf8_lossy(&version.stderr)
+        );
+    }
 
     let absolute_path = std::path::Path::new("/app/vault/writeReport.js");
 
@@ -27,9 +40,6 @@ fn write_report_to_vault(report: &VulnerabilityReport) -> String {
     if absolute_path.exists() {
         println!("Script file exists at: {:?}", absolute_path);
     }
-
-    let canonical_path = absolute_path.canonicalize().unwrap();
-    println!("Canonical path: {:?}", canonical_path);
 
     println!("write path {}", "/app/vault/writeReport.js");
 
