@@ -249,7 +249,7 @@ async fn not_found() -> HttpResponse {
 
 fn print_folder_structure(path: &Path, indent: usize) {
     if let Some(file_name) = path.file_name() {
-        if file_name == "node_modules" || file_name == "target" {
+        if file_name == "node_modules" {
             return; // Skip
         }
     }

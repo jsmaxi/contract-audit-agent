@@ -21,7 +21,7 @@ pub fn try_write_report_to_vault(report: &VulnerabilityReport) -> Option<String>
 
 fn write_report_to_vault(report: &VulnerabilityReport) -> String {
     let path_string = env::current_dir().unwrap().to_string_lossy().into_owned();
-    let path = format!("{}{}", path_string, "/vault/writeReport.js");
+    let path = format!("{}{}", path_string, "/target/vault/writeReport.js");
 
     println!("write path {}", path);
 
