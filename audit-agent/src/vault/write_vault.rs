@@ -33,22 +33,6 @@ fn write_report_to_vault(report: &VulnerabilityReport) -> String {
         Err(e) => println!("Error node version. {}", e),
     }
 
-    let version2 = Command::new("/usr/local/bin/node")
-        .arg("--version")
-        .output();
-
-    match version2 {
-        Ok(o) => {
-            if o.status.success() {
-                let stdout: String = String::from_utf8(o.stdout).unwrap().trim().to_string();
-                println!("Version. {}", stdout);
-            } else {
-                println!("Version failed. {}", String::from_utf8_lossy(&o.stderr));
-            }
-        }
-        Err(e) => println!("Error node version. {}", e),
-    }
-
     let absolute_path = std::path::Path::new("/app/vault/writeReport.js");
 
     // Checking if files exist

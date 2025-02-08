@@ -1,4 +1,4 @@
-use crate::models::report::VulnerabilityReport;
+use crate::models::{report::VulnerabilityReport, vulnerability::Vulnerability};
 use serde::Serialize;
 
 #[derive(Debug, Serialize)]
@@ -20,4 +20,9 @@ pub struct FixResponse {
 #[derive(Debug, Serialize)]
 pub struct ChatResponse {
     pub text: String,
+}
+
+#[derive(Debug, Serialize)]
+pub struct HistoryResponse {
+    pub report: Vec<Vulnerability>,
 }

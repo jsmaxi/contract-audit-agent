@@ -19,14 +19,16 @@ pub fn try_read_report_from_vault(id: &str) -> Option<Vec<Vulnerability>> {
 }
 
 fn read_report_from_vault(id: &str) -> Vec<Vulnerability> {
-    let vault_path = "/app/vault/readReport.js";
+    let absolute_path = std::path::Path::new("/app/vault/readReport.js");
 
-    println!("read path {}", vault_path);
+    // Checking if files exist
+    if absolute_path.exists() {
+        println!("Script file exists at: {:?}", absolute_path);
+    }
 
-    let current_dir = std::env::current_dir().unwrap();
-    println!("Current working directory: {:?}", current_dir);
+    println!("read path {}", "/app/vault/readReport.js");
 
-    let _output = Command::new("node").arg(vault_path).arg(&id).output();
+    let _output = Command::new("node").arg(absolute_path).arg(&id).output();
 
     if _output.is_err() {
         let error_string = _output.unwrap_err().to_string();

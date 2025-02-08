@@ -9,8 +9,8 @@ use agents::{
 };
 use config::config::{VALID_LANGUAGES, VALID_MODELS};
 use models::report::VulnerabilityReport;
-use server::request::{ChatRequest, FixRequest};
-use server::response::{ChatResponse, FixResponse};
+use server::request::{ChatRequest, FixRequest, HistoryRequest};
+use server::response::{ChatResponse, FixResponse, HistoryResponse};
 use server::{
     request::AuditRequest,
     response::{AuditErrorResponse, AuditResponse},
@@ -112,13 +112,6 @@ async fn audit_contract(request: web::Json<AuditRequest>) -> impl Responder {
     let _id = id.unwrap_or_else(|| "no ID generated".to_string());
 
     println!("End persisting in vault");
-
-    println!("Start reading from vault");
-
-    let r = try_read_report_from_vault(&_id);
-    let _report = r.unwrap_or_else(|| vec![]);
-
-    println!("End reading from vault");
 
     HttpResponse::Ok().json(AuditResponse { report, _id })
 }
@@ -227,6 +220,42 @@ async fn chat_ai(request: web::Json<ChatRequest>) -> impl Responder {
     }
 }
 
+#[actix_web::post("/history")]
+async fn history(request: web::Json<HistoryRequest>) -> impl Responder {
+    println!("History called [{}]", request.id);
+
+    // Measure execution time
+    let start = Instant::now();
+
+    let request: HistoryRequest = request.into_inner();
+
+    if request.id.trim().is_empty() {
+        let duration = start.elapsed();
+        println!("Execution Time: {:?}", duration);
+        return HttpResponse::BadRequest().json(AuditErrorResponse {
+            error: "Request parameters cannot be empty".to_string(),
+        });
+    }
+
+    println!("Start reading from vault");
+
+    let r = try_read_report_from_vault(&request.id);
+    let _report = r.unwrap_or_else(|| vec![]);
+
+    println!("End reading from vault");
+
+    if _report.is_empty() {
+        println!("Empty");
+    }
+
+    println!("History Done");
+
+    let duration = start.elapsed();
+    println!("Execution Time: {:?}", duration);
+
+    HttpResponse::Ok().json(HistoryResponse { report: _report })
+}
+
 #[actix_web::get("/health")]
 async fn health_check() -> HttpResponse {
     HttpResponse::Ok().json(serde_json::json!({
@@ -300,7 +329,7 @@ async fn actix_web(
     println!("Current directory: {:?}", current_dir);
     print_folder_structure(&current_dir, 0);
 
-    // Install node
+    // Install node in docker container (shuttle dev)
     let __ = std::process::Command::new("apt-get").arg("update").output();
     let ___ = std::process::Command::new("apt-get")
         .arg("install")
@@ -335,6 +364,7 @@ async fn actix_web(
         .service(audit_contract)
         .service(fix_contract)
         .service(chat_ai)
+        .service(history)
         .service(health_check)
         .default_service(web::route().to(not_found));
     };

@@ -37,3 +37,9 @@ pub struct ChatRequest {
     #[validate(length(min = 1, message = "AI model must be specified"))]
     pub model: String,
 }
+
+#[derive(Debug, Deserialize, Validate)]
+pub struct HistoryRequest {
+    #[validate(length(min = 1, message = "Report ID cannot be empty"))]
+    pub id: String,
+}
