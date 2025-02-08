@@ -20,12 +20,9 @@ pub fn try_read_report_from_vault(id: &str) -> Option<Vec<Vulnerability>> {
 }
 
 fn read_report_from_vault(id: &str) -> Vec<Vulnerability> {
-    let path = format!(
-        "{}/vault/readReport.js",
-        env::var("CARGO_MANIFEST_DIR").unwrap()
-    );
+    let path = "app/vault/readReport.js";
 
-    println!("path {}", path);
+    println!("read path {}", path);
 
     let _output = Command::new("node").arg(path).arg(&id).output();
 

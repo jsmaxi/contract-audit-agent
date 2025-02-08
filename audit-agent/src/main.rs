@@ -108,7 +108,6 @@ async fn audit_contract(request: web::Json<AuditRequest>) -> impl Responder {
     println!("Start persisting in vault");
 
     let id = try_write_report_to_vault(&report);
-
     let _id = id.unwrap_or_else(|| "no ID generated".to_string());
 
     println!("End persisting in vault");
@@ -116,8 +115,7 @@ async fn audit_contract(request: web::Json<AuditRequest>) -> impl Responder {
     println!("Start reading from vault");
 
     let r = try_read_report_from_vault(&_id);
-
-    let _report = r.unwrap();
+    let _report = r.unwrap_or_else(|| vec![]);
 
     println!("End reading from vault");
 

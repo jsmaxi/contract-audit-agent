@@ -20,12 +20,9 @@ pub fn try_write_report_to_vault(report: &VulnerabilityReport) -> Option<String>
 }
 
 fn write_report_to_vault(report: &VulnerabilityReport) -> String {
-    let path = format!(
-        "{}/vault/writeReport.js",
-        env::var("CARGO_MANIFEST_DIR").unwrap()
-    );
+    let path = "/vault/writeReport.js";
 
-    println!("path {}", path);
+    println!("write path {}", path);
 
     let input_json = serde_json::to_string(&report.vulnerabilities);
 
