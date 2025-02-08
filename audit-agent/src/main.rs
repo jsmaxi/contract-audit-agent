@@ -17,8 +17,9 @@ use server::{
 };
 use shuttle_actix_web::ShuttleActixWeb;
 use shuttle_runtime::SecretStore;
-use std::env;
+use std::path::Path;
 use std::time::Instant;
+use std::{env, fs};
 use vault::read_vault::try_read_report_from_vault;
 use vault::write_vault::try_write_report_to_vault;
 mod agents;
@@ -246,6 +247,40 @@ async fn not_found() -> HttpResponse {
         .body("API route not found")
 }
 
+fn print_folder_structure(path: &Path, indent: usize) {
+    if let Some(file_name) = path.file_name() {
+        if file_name == "node_modules" {
+            return; // Skip
+        }
+    }
+
+    if path.is_dir() {
+        println!(
+            "{:indent$}📁 {}",
+            "",
+            path.file_name().unwrap().to_string_lossy(),
+            indent = indent
+        );
+
+        if let Ok(entries) = fs::read_dir(path) {
+            for entry in entries {
+                if let Ok(entry) = entry {
+                    let entry_path = entry.path();
+                    // Recursively print the contents of the directory
+                    print_folder_structure(&entry_path, indent + 4);
+                }
+            }
+        }
+    } else {
+        println!(
+            "{:indent$}📄 {}",
+            "",
+            path.file_name().unwrap().to_string_lossy(),
+            indent = indent
+        );
+    }
+}
+
 #[shuttle_runtime::main]
 async fn actix_web(
     #[shuttle_runtime::Secrets] secrets: SecretStore,
@@ -260,6 +295,10 @@ async fn actix_web(
         .expect("Secret API KEY is not set");
     // Set environment variable for GenAI
     std::env::set_var("OPENAI_API_KEY", api_key);
+
+    let root_path: &Path = Path::new(".");
+    println!("Folder structure for: {:?}", root_path);
+    print_folder_structure(root_path, 0);
 
     // Allowed caller
     let allowed_origin1 = "http://localhost:3000";
