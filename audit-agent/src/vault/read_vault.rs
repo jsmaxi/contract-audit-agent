@@ -20,12 +20,13 @@ pub fn try_read_report_from_vault(id: &str) -> Option<Vec<Vulnerability>> {
 }
 
 fn read_report_from_vault(id: &str) -> Vec<Vulnerability> {
-    let path_string = env::current_dir().unwrap().to_string_lossy().into_owned();
-    let path = format!("{}{}", path_string, "/target/vault/readReport.js");
+    // let path_string = env::current_dir().unwrap().to_string_lossy().into_owned();
+    // let path = format!("{}{}", path_string, "/target/vault/readReport.js");
+    let vault_path = "/app/vault/readReport.js";
 
-    println!("read path {}", path);
+    println!("read path {}", vault_path);
 
-    let _output = Command::new("node").arg(path).arg(&id).output();
+    let _output = Command::new("node").arg(vault_path).arg(&id).output();
 
     if _output.is_err() {
         let error_string = _output.unwrap_err().to_string();

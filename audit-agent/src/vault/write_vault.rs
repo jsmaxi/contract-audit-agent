@@ -20,10 +20,11 @@ pub fn try_write_report_to_vault(report: &VulnerabilityReport) -> Option<String>
 }
 
 fn write_report_to_vault(report: &VulnerabilityReport) -> String {
-    let path_string = env::current_dir().unwrap().to_string_lossy().into_owned();
-    let path = format!("{}{}", path_string, "/target/vault/writeReport.js");
+    // let path_string = env::current_dir().unwrap().to_string_lossy().into_owned();
+    // let path = format!("{}{}", path_string, "/target/vault/writeReport.js");
+    let vault_path = "/vault/writeReport.js";
 
-    println!("write path {}", path);
+    println!("write path {}", vault_path);
 
     let input_json = serde_json::to_string(&report.vulnerabilities);
 
@@ -33,7 +34,10 @@ fn write_report_to_vault(report: &VulnerabilityReport) -> String {
 
     let input_json: String = input_json.unwrap();
 
-    let _output = Command::new("node").arg(path).arg(&input_json).output();
+    let _output = Command::new("node")
+        .arg(vault_path)
+        .arg(&input_json)
+        .output();
 
     if _output.is_err() {
         let error_string = _output.unwrap_err().to_string();
