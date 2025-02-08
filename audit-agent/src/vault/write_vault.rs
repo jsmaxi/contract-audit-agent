@@ -19,7 +19,7 @@ pub fn try_write_report_to_vault(report: &VulnerabilityReport) -> Option<String>
 }
 
 fn write_report_to_vault(report: &VulnerabilityReport) -> String {
-    let vault_path = "/app/vault/writeReport.js";
+    let vault_path = "assets/vault/writeReport.js";
 
     println!("write path {}", vault_path);
 

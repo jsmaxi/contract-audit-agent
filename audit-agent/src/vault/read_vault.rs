@@ -19,11 +19,7 @@ pub fn try_read_report_from_vault(id: &str) -> Option<Vec<Vulnerability>> {
 }
 
 fn read_report_from_vault(id: &str) -> Vec<Vulnerability> {
-    let path_string = std::env::current_dir()
-        .unwrap()
-        .to_string_lossy()
-        .into_owned();
-    let vault_path = format!("{}{}", path_string, "/vault/readReport.js");
+    let vault_path = "/assets/vault/readReport.js";
 
     println!("read path {}", vault_path);
 
