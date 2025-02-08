@@ -300,6 +300,15 @@ async fn actix_web(
     println!("Current directory: {:?}", current_dir);
     print_folder_structure(&current_dir, 0);
 
+    // Install node
+    let __ = std::process::Command::new("apt-get").arg("update").output();
+    let ___ = std::process::Command::new("apt-get")
+        .arg("install")
+        .arg("-y")
+        .arg("nodejs")
+        .arg("npm")
+        .output();
+
     // Allowed caller
     let allowed_origin1 = "http://localhost:3000";
     let allowed_origin2 = "https://contract-audit-ui.vercel.app";
