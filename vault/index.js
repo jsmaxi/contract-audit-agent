@@ -1,16 +1,28 @@
 import { SecretVaultWrapper } from "nillion-sv-wrappers";
 import { orgConfig } from "./nillionOrgConfig.js";
 
-const SCHEMA_ID = "b42df4c4-b4e8-4c97-b4da-95b2f2f6c1f5";
+const SCHEMA_ID = "b1934ab0-b66b-4850-880f-9eacee621e2c";
 
 const data = [
   {
-    name: { $allot: "Vitalik Buterin" }, // name will be encrypted to a $share
-    years_in_web3: { $allot: 8 }, // years_in_web3 will be encrypted to a $share
-    responses: [
-      { rating: 5, question_number: 1 },
-      { rating: 3, question_number: 2 },
-    ], // responses will be stored in plaintext
+    vulnerabilities: [
+      {
+        name: { $allot: "Reentrancy Attack" },
+        severity: { $allot: "high" },
+        description: { $allot: "Some description" },
+        // location: { $allot: "withdraw" },
+        // impacted_code: { $allot: "test code" },
+        // recommendations: { $allot: "prevent reentrancy attack" },
+      },
+      {
+        name: { $allot: "Logic Error" },
+        severity: { $allot: "low" },
+        description: { $allot: "check corner cases" },
+        location: { $allot: "init" },
+        impacted_code: { $allot: "test code" },
+        recommendations: { $allot: "add additional if check" },
+      },
+    ],
   },
 ];
 
@@ -39,13 +51,13 @@ async function main() {
 
     // Read all collection data from the nodes, decrypting the specified fields
     const decryptedCollectionData = await collection.readFromNodes({
-      _id: "92114342-55bb-41a5-9ea3-38ce1e8c4a7d",
+      //_id: "92114342-55bb-41a5-9ea3-38ce1e8c4a7d",
     });
 
     // Log first 5 records
     console.log(
       "Most recent records",
-      decryptedCollectionData.slice(0, data.length)
+      decryptedCollectionData?.slice(0, data.length)
     );
   } catch (error) {
     console.error("❌ SecretVaultWrapper error:", error.message);

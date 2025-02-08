@@ -3,8 +3,8 @@ export const orgConfig = {
   // in a production environment, make sure to put your org's credentials in environment variables
   orgCredentials: {
     secretKey:
-      "a786abe58f933e190d01d05b467838abb1e391007a674d8a3aef106e15a0bf5a",
-    orgDid: "did:nil:testnet:nillion1vn49zpzgpagey80lp4xzzefaz09kufr5e6zq8c",
+      "75b97ff7a3e0552a64f46ff6c933d638c6eaeb8ff44feba6d0932b5ea138a8dc",
+    orgDid: "did:nil:testnet:nillion1tt9zwxx5f0pzwjyktycll6dqe08j9k7xrl804e",
   },
   // demo node config
   nodes: [
