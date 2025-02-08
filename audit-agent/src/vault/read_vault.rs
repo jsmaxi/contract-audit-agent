@@ -1,5 +1,4 @@
 use crate::models::vulnerability::Vulnerability;
-use std::env;
 use std::panic::catch_unwind;
 use std::process::{Command, Output};
 
@@ -22,7 +21,7 @@ pub fn try_read_report_from_vault(id: &str) -> Option<Vec<Vulnerability>> {
 fn read_report_from_vault(id: &str) -> Vec<Vulnerability> {
     // let path_string = env::current_dir().unwrap().to_string_lossy().into_owned();
     // let path = format!("{}{}", path_string, "/target/vault/readReport.js");
-    let vault_path = "/app/vault/readReport.js";
+    let vault_path = "vault/readReport.js";
 
     println!("read path {}", vault_path);
 

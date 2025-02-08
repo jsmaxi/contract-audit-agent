@@ -296,21 +296,9 @@ async fn actix_web(
     // Set environment variable for GenAI
     std::env::set_var("OPENAI_API_KEY", api_key);
 
-    // let root_path: &Path = Path::new(".");
     let current_dir = env::current_dir().expect("Failed to get current directory");
     println!("Current directory: {:?}", current_dir);
     print_folder_structure(&current_dir, 0);
-
-    // List the contents of the current directory
-    if let Ok(entries) = fs::read_dir(&current_dir) {
-        for entry in entries {
-            if let Ok(entry) = entry {
-                println!("Found: {:?}", entry.path());
-            }
-        }
-    } else {
-        println!("Failed to read directory contents.");
-    }
 
     // Allowed caller
     let allowed_origin1 = "http://localhost:3000";
