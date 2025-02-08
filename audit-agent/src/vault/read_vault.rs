@@ -23,11 +23,16 @@ fn read_report_from_vault(id: &str) -> Vec<Vulnerability> {
     exe_path.pop(); // Remove the executable name
     exe_path.push("vault");
     exe_path.push("readReport.js");
+
     // let vault_path = "/vault/readReport.js";
 
     let vault_path = exe_path.into_os_string().into_string().unwrap();
 
     println!("read path {}", vault_path);
+
+    let current_dir = std::env::current_dir().unwrap();
+    println!("Current working directory: {:?}", current_dir);
+    println!("Current {}", current_dir.as_path().to_str().unwrap());
 
     let _output = Command::new("node").arg(vault_path).arg(&id).output();
 

@@ -19,9 +19,19 @@ pub fn try_write_report_to_vault(report: &VulnerabilityReport) -> Option<String>
 }
 
 fn write_report_to_vault(report: &VulnerabilityReport) -> String {
-    let vault_path = "/app/vault/writeReport.js";
+    let _output = Command::new("node").arg("--version").output();
 
-    println!("write path {}", vault_path);
+    let absolute_path = std::path::Path::new("/app/vault/writeReport.js");
+
+    // Checking if files exist
+    if absolute_path.exists() {
+        println!("Script file exists at: {:?}", absolute_path);
+    }
+
+    let canonical_path = absolute_path.canonicalize().unwrap();
+    println!("Canonical path: {:?}", canonical_path);
+
+    println!("write path {}", "/app/vault/writeReport.js");
 
     let input_json = serde_json::to_string(&report.vulnerabilities);
 
@@ -32,7 +42,7 @@ fn write_report_to_vault(report: &VulnerabilityReport) -> String {
     let input_json: String = input_json.unwrap();
 
     let _output = Command::new("node")
-        .arg(vault_path)
+        .arg(absolute_path)
         .arg(&input_json)
         .output();
 
