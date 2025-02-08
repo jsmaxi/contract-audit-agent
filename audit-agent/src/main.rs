@@ -249,18 +249,18 @@ async fn not_found() -> HttpResponse {
 
 fn print_folder_structure(path: &Path, indent: usize) {
     if let Some(file_name) = path.file_name() {
-        if file_name == "node_modules" {
+        if file_name == "node_modules" || file_name == "target" {
             return; // Skip
         }
     }
 
     if path.is_dir() {
-        println!(
-            "{:indent$}📁 {}",
-            "",
-            path.file_name().unwrap().to_string_lossy(),
-            indent = indent
-        );
+        let dir_name = match path.file_name() {
+            Some(name) => name.to_string_lossy(),
+            None => ".".into(), // Use "." if the path has no file name
+        };
+
+        println!("{:indent$}📁 {}", "", dir_name, indent = indent);
 
         if let Ok(entries) = fs::read_dir(path) {
             for entry in entries {

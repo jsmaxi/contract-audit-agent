@@ -1,5 +1,4 @@
 use crate::models::vulnerability::Vulnerability;
-use std::env;
 use std::panic::catch_unwind;
 use std::process::{Command, Output};
 
