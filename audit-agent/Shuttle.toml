@@ -6,4 +6,4 @@ include = [
 
 # Declare files that should be moved to the runtime container:
 [build]
-vault = ["vault"]
+assets = ["vault"]
