@@ -1,6 +1,8 @@
 import { SecretVaultWrapper } from "nillion-sv-wrappers";
 import { orgConfig } from "./nillionOrgConfig.js";
 
+// This is an example. Use readReport and writeReport scripts.
+
 const SCHEMA_ID = "b1934ab0-b66b-4850-880f-9eacee621e2c";
 
 const data = [

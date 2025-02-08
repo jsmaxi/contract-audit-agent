@@ -4,6 +4,7 @@ use serde::Serialize;
 #[derive(Debug, Serialize)]
 pub struct AuditResponse {
     pub report: VulnerabilityReport,
+    pub _id: String,
 }
 
 #[derive(Debug, Serialize)]

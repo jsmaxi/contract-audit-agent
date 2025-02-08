@@ -1,0 +1,42 @@
+use crate::models::report::VulnerabilityReport;
+use std::panic::catch_unwind;
+use std::process::{Command, Output};
+
+const WRITE_SCRIPT_PATH: &str = "../vault/writeReport.js";
+
+pub fn try_write_report_to_vault(report: &VulnerabilityReport) -> Option<String> {
+    let result = catch_unwind(|| {
+        return write_report_to_vault(report);
+    });
+
+    match result {
+        Ok(r) => Some(r),
+        Err(_) => {
+            println!("vault write panicked!");
+            None
+        }
+    }
+}
+
+fn write_report_to_vault(report: &VulnerabilityReport) -> String {
+    let input_json = serde_json::to_string(&report.vulnerabilities);
+
+    if input_json.is_err() {
+        panic!("Failed to convert the report into JSON for vault");
+    }
+
+    let input_json: String = input_json.unwrap();
+
+    let output: Output = Command::new("node")
+        .arg(WRITE_SCRIPT_PATH)
+        .arg(&input_json)
+        .output()
+        .unwrap();
+
+    if output.status.success() {
+        let resuld_id: String = String::from_utf8(output.stdout).unwrap().trim().to_string();
+        resuld_id
+    } else {
+        panic!("Script failed: {}", String::from_utf8_lossy(&output.stderr));
+    }
+}

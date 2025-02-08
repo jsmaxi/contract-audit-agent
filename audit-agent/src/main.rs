@@ -19,10 +19,13 @@ use shuttle_actix_web::ShuttleActixWeb;
 use shuttle_runtime::SecretStore;
 use std::env;
 use std::time::Instant;
+use vault::read_vault::try_read_report_from_vault;
+use vault::write_vault::try_write_report_to_vault;
 mod agents;
 mod config;
 mod models;
 mod server;
+mod vault;
 
 #[actix_web::post("/audit")]
 async fn audit_contract(request: web::Json<AuditRequest>) -> impl Responder {
@@ -102,7 +105,23 @@ async fn audit_contract(request: web::Json<AuditRequest>) -> impl Responder {
     let duration = start.elapsed();
     println!("Execution Time: {:?}", duration);
 
-    HttpResponse::Ok().json(AuditResponse { report })
+    println!("Start persisting in vault");
+
+    let id = try_write_report_to_vault(&report);
+
+    let _id = id.unwrap_or_else(|| "no ID generated".to_string());
+
+    println!("End persisting in vault");
+
+    println!("Start reading from vault");
+
+    let r = try_read_report_from_vault(&_id);
+
+    let _report = r.unwrap();
+
+    println!("End reading from vault");
+
+    HttpResponse::Ok().json(AuditResponse { report, _id })
 }
 
 #[actix_web::post("/fix")]
