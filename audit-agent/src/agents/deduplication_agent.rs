@@ -65,6 +65,7 @@ impl FormatDeduplicationAgentTrait for FormatDeduplicationAgent {
         let prompt: String = format!(
             r#"Here is a list of {} smart contract vulnerabilities. Some may be duplicates with slightly different wording.
             Please analyze and combine duplicate entries, keeping the most detailed and relevant description and recommendations.
+            Make sure each severity field is correctly set to either critical, high, medium or low.
             Return the deduplicated list in the same JSON format.
 
             {}
