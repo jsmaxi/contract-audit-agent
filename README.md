@@ -106,6 +106,10 @@ While the smart contract security space has existing AI solutions, we believe in
 4. Customizable analysis parameters
 5. User-centric design focused on accessibility
 
+## Team
+JsMaxi
+[GitHub](https://github.com/jsmaxi) | [X](https://x.com/jsmaxi666) | [LinkedIn](https://www.linkedin.com/in/j-s-4b489a32b/)
+
 *ETHGlobal Agentic Hackathon 2025. May your smart contracts be safer than ever!*
 
 👉 https://contract-audit-ui-production.up.railway.app/
