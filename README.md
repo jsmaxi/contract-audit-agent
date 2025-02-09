@@ -37,4 +37,4 @@ OPENAI_API_KEY = "<your_api_key_here>"
 
 If not using Shuttle, export OPENAI_API_KEY with value as your system environment variable.
 
-This project uses Nillion Secret Vault to store and retrieve generated audit reports in a secret and decentralized fashion. Nillion Secret Vault configuration and scripts are located under the '/audit-agent/vault' folder. Node scripts are invoked from Rust code to interact with the vault. See '/audit-agent/src/vault' read_vault.rs and write_vault.rs for example. In the future, will consider using Nillion SDK for that.
+This project uses Nillion Secret Vault to store and retrieve generated audit reports in a secret and decentralized fashion. Nillion Secret Vault configuration and scripts are located under the 'vault' folder. Node scripts are invoked from Rust code to interact with the vault. See '/audit-agent/src/vault/read_vault.rs' and '/audit-agent/src/vault/write_vault.rs' for example. In the future, will consider using Nillion SDK for that.
